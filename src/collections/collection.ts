@@ -13,12 +13,21 @@
 // limitations under the License.
 
 import _ from 'lodash';
-import { DeleteResult, FindOneAndUpdateOptions, ModifyResult, ObjectId, UpdateOptions, UpdateResult } from 'mongodb';
+import {
+  DeleteResult,
+  FindOneAndUpdateOptions,
+  InsertOneResult,
+  ModifyResult,
+  ObjectId,
+  UpdateOptions,
+  UpdateResult
+} from 'mongodb';
 import { FindCursor } from './cursor';
 import { HTTPClient } from '@/src/client';
 import { formatQuery, addDefaultId, setOptionsAndCb, executeOperation } from './utils';
 import { inspect } from 'util';
 import mpath from 'mpath';
+import { InsertManyResult } from 'mongoose';
 
 // https://github.com/mongodb/node-mongodb-native/pull/3323
 type AstraUpdateResult = Omit<UpdateResult, 'upsertedId'> & { upsertedId: ObjectId | null };
@@ -55,36 +64,30 @@ export class Collection {
    * @param cb
    * @returns Promise
    */
-  async insertOne(doc: Record<string, any>, options?: any, cb?: DocumentCallback): Promise<any> {
+  async insertOne(doc: Record<string, any>, options?: any, cb?: DocumentCallback) {
     ({ options, cb } = setOptionsAndCb(options, cb));
-    return executeOperation(async () => {
+    return executeOperation(async (): Promise<InsertOneResult> => {
       addDefaultId(doc);
       const { data } = await this.httpClient.put(`/${doc._id}`, doc, options);
-      data.acknowledged = false;
-      if (data.documentId) {
-        data.insertedId = data.documentId;
-        data.acknowledged = true;
-        delete data.documentId;
-      }
-      return data;
+
+      return {
+        acknowledged: true,
+        insertedId: data.documentId
+      };
     }, cb);
   }
 
   async insertMany(docs: any, options?: any, cb?: any) {
     ({ options, cb } = setOptionsAndCb(options, cb));
-    return executeOperation(async () => {
+    return executeOperation(async (): Promise<InsertManyResult<any>> => {
       docs = docs.map((doc: any) => addDefaultId(doc));
       const { data } = await this.httpClient.post('/batch', docs, { params: { 'id-path': '_id' } });
-      data.acknowledged = false;
-      if (data.documentIds?.length) {
-        data.acknowledged = true;
-        data.insertedIds = {};
-        data.documentIds.forEach((docId: string, index: number) => {
-          data.insertedIds[index] = docId;
-        });
-        delete data.documentIds;
-      }
-      return data;
+      
+      return {
+        acknowledged: true,
+        insertedCount: data.documentIds?.length || 0,
+        insertedIds: data.documentIds
+      };
     }, cb);
   }
 
@@ -248,7 +251,7 @@ export class Collection {
     }, cb);
   }
 
-  async deleteOne(query: any, options?: any, cb?: any): Promise<DeleteResult> {
+  async deleteOne(query: any, options?: any, cb?: any) {
     ({ options, cb } = setOptionsAndCb(options, cb));
     return executeOperation(async (): Promise<DeleteResult> => {
       const doc = await this.findOne(query, options);
@@ -260,9 +263,9 @@ export class Collection {
     }, cb);
   }
 
-  async deleteMany(query: any, options: any, cb: any) {
+  async deleteMany(query: any, options: any, cb?: any) {
     ({ options, cb } = setOptionsAndCb(options, cb));
-    return executeOperation(async () => {
+    return executeOperation(async (): Promise<DeleteResult> => {
       const cursor = this.find(query, options);
       const docs = await cursor.toArray();
       if (docs.length) {
@@ -290,16 +293,16 @@ export class Collection {
 
   async findOne(query: any, options?: any, cb?: any) {
     ({ options, cb } = setOptionsAndCb(options, cb));
-    return executeOperation(async () => {
+    return executeOperation(async (): Promise<any | null> => {
       const cursor = this.find(query, { ...options, limit: 1 });
       const res = await cursor.toArray();
-      return res.length ? res[0] : undefined;
+      return res.length ? res[0] : null;
     }, cb);
   }
 
   async distinct(key: any, filter: any, options?: any, cb?: any) {
     ({ options, cb } = setOptionsAndCb(options, cb));
-    return executeOperation(async () => {
+    return executeOperation(async (): Promise<any[]> => {
       const cursor = this.find(filter, { ...options });
       const res = await cursor.toArray();
       const list: string[] = [];
@@ -312,7 +315,7 @@ export class Collection {
 
   async countDocuments(query: any, options?: any, cb?: any) {
     ({ options, cb } = setOptionsAndCb(options, cb));
-    return executeOperation(async () => {
+    return executeOperation(async (): Promise<number> => {
       const cursor = this.find(query, options);
       return await cursor.count();
     }, cb);
@@ -320,7 +323,7 @@ export class Collection {
 
   // deprecated and overloaded
 
-  async remove(query: any, options: any, cb: any) {
+  async remove(query: any, options: any, cb?: any) {
     return await this.deleteMany(query, options, cb);
   }
 
@@ -341,11 +344,11 @@ export class Collection {
     }, cb);
   }
 
-  async count(query: any, options: any, cb: any) {
+  async count(query: any, options: any, cb?: any) {
     return await this.countDocuments(query, options, cb);
   }
 
-  async update(query: any, update: any, options: any, cb: any) {
+  async update(query: any, update: any, options: any, cb?: any) {
     return await this.updateMany(query, update, options, cb);
   }
 
@@ -377,8 +380,18 @@ export class Collection {
    * @param pipeline
    * @param options
    */
-  aggregate<T>(pipeline?: any[], options?: any) {
+  aggregate<T>(pipeline?: any[], options?: any, cb?: any) {
     throw new Error('Not Implemented');
+  }
+
+  /**
+   *
+   * @param ops
+   * @param options
+   * @param cb
+   */
+  bulkWrite(ops: any[], options?: any, cb?: any) {
+    throw new Error('bulkWrite() Not Implemented');
   }
 
   /**
@@ -388,7 +401,7 @@ export class Collection {
    * @param cb
    * @returns any
    */
-  async createIndex(index: any, options: any, cb: any) {
+  async createIndex(index: any, options: any, cb?: any) {
     if (cb) {
       return cb(index);
     }

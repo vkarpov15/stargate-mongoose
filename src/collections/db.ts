@@ -95,9 +95,7 @@ export class Db {
    * @param cb
    * @returns Promise
    */
-  async dropDatabase(cb?: CollectionCallback) {
-    if (cb) {
-      cb(undefined, undefined);
-    }
+  dropDatabase(cb?: CollectionCallback) {
+    throw new Error('dropDatabase not implemented');
   }
 }

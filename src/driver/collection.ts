@@ -33,56 +33,61 @@ export class Collection extends MongooseCollection {
     return this.collection.find(query, options, cb);
   }
 
-  async findOne(query: any, options?: any, cb?: any) {
-    return await this.collection.findOne(query, options, cb);
+  findOne(query: any, options?: any, cb?: any) {
+    return this.collection.findOne(query, options, cb);
   }
 
-  async insertOne(doc: any, options?: any, cb?: any) {
-    return await this.collection.insertOne(doc, options, cb);
-  }
-  async insert(docs: any, options?: any, cb?: any) {
-    return await this.collection.insertMany(docs, options, cb);
+  insertOne(doc: any, options?: any, cb?: any) {
+    return this.collection.insertOne(doc, options, cb);
   }
 
-  async insertMany(docs: any, options?: any, cb?: any) {
-    return await this.collection.insertMany(docs, options, cb);
+  insert(docs: any, options?: any, cb?: any) {
+    return this.collection.insertMany(docs, options, cb);
   }
 
-  async findAndModify(query: any, update: any, options?: any, cb?: any) {
-    return await this.collection.updateMany(query, update, options, cb);
+  insertMany(docs: any, options?: any, cb?: any) {
+    return this.collection.insertMany(docs, options, cb);
   }
 
-  async findOneAndUpdate(query: any, update: any, options?: any, cb?: any) {
-    return await this.collection.findOneAndUpdate(query, update, options, cb);
+  findAndModify(query: any, update: any, options?: any, cb?: any) {
+    return this.collection.updateMany(query, update, options, cb);
   }
 
-  async findOneAndDelete(query: any, options?: any, cb?: any) {
-    return await this.collection.findOneAndDelete(query, options, cb);
+  findOneAndUpdate(query: any, update: any, options?: any, cb?: any) {
+    return this.collection.findOneAndUpdate(query, update, options, cb);
   }
 
-  async findOneAndReplace(query: any, newDoc: any, options?: any, cb?: any) {
-    return await this.collection.updateMany(query, newDoc, options, cb);
+  findOneAndDelete(query: any, options?: any, cb?: any) {
+    return this.collection.findOneAndDelete(query, options, cb);
   }
 
-  async deleteMany(query: any, options?: any, cb?: any) {
-    return await this.collection.deleteMany(query, options, cb);
+  findOneAndReplace(query: any, newDoc: any, options?: any, cb?: any) {
+    return this.collection.updateMany(query, newDoc, options, cb);
   }
 
-  async remove(query: any, options: any, cb: any) {
-    return await this.collection.remove(query, options, cb);
+  deleteMany(query: any, options?: any, cb?: any) {
+    return this.collection.deleteMany(query, options, cb);
   }
 
-  async updateOne(query: any, update: any, options?: any, cb?: any) {
-    return await this.collection.updateOne(query, update, options, cb);
+  remove(query: any, options: any, cb: any) {
+    return this.collection.remove(query, options, cb);
   }
 
-  async updateMany(query: any, update: any, options?: any, cb?: any) {
-    return await this.collection.updateMany(query, update, options, cb);
+  updateOne(query: any, update: any, options?: any, cb?: any) {
+    return this.collection.updateOne(query, update, options, cb);
+  }
+
+  updateMany(query: any, update: any, options?: any, cb?: any) {
+    return this.collection.updateMany(query, update, options, cb);
+  }
+
+  dropIndexes(cb?: any) {
+    return this.collection.dropIndexes(cb);
   }
 
   // No-ops
-  async dropIndexes(cb?: any) {
-    return await this.collection.dropIndexes(cb);
+  bulkWrite(ops: any[], options?: any, cb?: any) {
+    throw new Error('bulkWrite() Not Implemented');
   }
 }
 

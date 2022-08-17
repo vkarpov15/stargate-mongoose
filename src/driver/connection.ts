@@ -31,14 +31,14 @@ export class Connection extends MongooseConnection {
     return super.collection(name, options);
   }
 
-  async createCollection(name: string, options: any, callback: any) {
+  createCollection(name: string, options: any, callback: any) {
     const db = this.client.db();
-    return await db.createCollection(name, options, callback);
+    return db.createCollection(name, options, callback);
   }
 
-  async dropCollection(name: string, callback: any) {
+  dropCollection(name: string, callback: any) {
     const db = this.client.db();
-    return await db.dropCollection(name);
+    return db.dropCollection(name);
   }
 
   openUri(uri: string, options: any, callback: any) {

@@ -31,6 +31,12 @@ export class FindCursor {
   nextPageState?: string;
   limit: number;
 
+  batch: Record<string, any>[] = [];
+  batchSize: number;
+  batchIndex: number;
+  totalNumFetched: number;
+  exhausted: boolean;
+
   /**
    *
    * @param collection
@@ -43,6 +49,14 @@ export class FindCursor {
     this.options = options;
     this.limit = options?.limit || Infinity;
     this.status = 'initialized';
+    this.exhausted = false;
+
+    // Load this many documents at a time in `this.batch` when using next()
+    this.batchSize = options?.batchSize || DEFAULT_PAGE_SIZE;
+    // Current position in batch
+    this.batchIndex = 0;
+    // Total number of documents returned, should be < limit
+    this.totalNumFetched = 0;
   }
 
   /**
@@ -53,24 +67,12 @@ export class FindCursor {
     if (this.status === 'executed' || this.status === 'executing') {
       return;
     }
-    this.status = 'executing';
-    const oneRequest = this.limit && this.limit < DEFAULT_PAGE_SIZE;
-    do {
-      const reqParams: any = {
-        where: this.query,
-        'page-size': oneRequest ? this.limit : DEFAULT_PAGE_SIZE
-      };
-      if (this.nextPageState) {
-        reqParams['page-state'] = this.nextPageState;
-      }
-      const res = await this.collection.httpClient.get('/', {
-        params: reqParams
-      });
-      this.nextPageState = res.pageState;
-      const resAsArray = _.keys(res.data).map(i => res.data[i]);
-      this.documents = this.documents.concat(resAsArray);
-    } while (!oneRequest && this.documents.length < this.limit && this.nextPageState);
-    this.status = 'executed';
+
+    for (let doc = await this.next(); doc != null; doc = await this.next()) {
+      this.documents.push(doc);
+    }
+
+    return this.documents;
   }
 
   /**
@@ -90,13 +92,81 @@ export class FindCursor {
    * @param iterator
    * @param cb
    */
+
+  async next(cb?: any): Promise<any> {
+    if (this.batchIndex < this.batch.length) {
+      const doc = this.batch[this.batchIndex++];
+      if (cb != null) {
+        return cb(null, doc);
+      }
+
+      return doc;
+    }
+
+    if (this.exhausted) {
+      this.status = 'executed';
+    }
+
+    if (this.status === 'executed') {
+      if (cb != null) {
+        return cb(null, null);
+      }
+
+      return null;
+    }
+
+    this.status = 'executing';
+
+    await this._getMore();
+
+    const doc = this.batch[this.batchIndex++] || null;
+    if (cb != null) {
+      return cb(null, doc);
+    }
+
+    return doc;
+  }
+
+  /*!
+   * ignore
+   */
+
+  async _getMore() {
+    const batchSize = Math.min(this.batchSize, this.limit - this.totalNumFetched);
+
+    const reqParams: any = {
+      where: this.query,
+      'page-size': batchSize
+    };
+    if (this.nextPageState) {
+      reqParams['page-state'] = this.nextPageState;
+    }
+    const res = await this.collection.httpClient.get('/', {
+      params: reqParams
+    });
+    this.nextPageState = res.pageState;
+    if (this.nextPageState == null) {
+      this.exhausted = true;
+    }
+    this.batch = _.keys(res.data).map(i => res.data[i]);
+    this.batchIndex = 0;
+    this.totalNumFetched += batchSize;
+    if (this.totalNumFetched >= this.limit) {
+      this.exhausted = true;
+      delete this.nextPageState;
+    }
+  }
+
+  /**
+   *
+   * @param iterator
+   * @param cb
+   */
   async forEach(iterator: any, cb?: any) {
     return executeOperation(async () => {
-      await this.getAll();
-      for (const doc of this.documents) {
-        await iterator(doc);
+      for (let doc = await this.next(); doc != null; doc = await this.next()) {
+        iterator(doc);
       }
-      return this.documents;
     }, cb);
   }
 

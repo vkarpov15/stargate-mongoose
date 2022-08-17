@@ -60,10 +60,16 @@ describe('AstraMongoose - collections.cursor', async () => {
         done();
       });
     });
+    it('should get next document with next()', async () => {
+      const cursor = new FindCursor(collection, {});
+      const doc = await cursor.next();
+      assert.ok(doc);
+    });
     it('should execute a limited query', async () => {
       const cursor = new FindCursor(collection, {}, { limit: 1 });
       const res = await cursor.toArray();
       assert.strictEqual(res.length, 1);
+      assert.equal(cursor.batch.length, 1);
     });
     it('should execute an all query', async () => {
       const cursor = new FindCursor(collection, {});
@@ -91,7 +97,7 @@ describe('AstraMongoose - collections.cursor', async () => {
       });
       assert.strictEqual(docCount, sampleSize);
     });
-    it('should iterate over all documents with an async iterator', async () => {
+    it('should iterate over all documents with a forEach()', async () => {
       const cursor = new FindCursor(collection, {});
       let docCount = 0;
       await cursor.forEach(async (_doc: any) => {

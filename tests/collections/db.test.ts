@@ -115,19 +115,4 @@ describe('AstraMongoose - collections.Db', async () => {
       }
     });
   });
-
-  describe('Db noops', () => {
-    it('should handle noop: dropDatabase', async () => {
-      const db = new Db(astraClient.httpClient, 'test-db');
-      const res = await db.dropDatabase();
-      assert.strictEqual(res, undefined);
-    });
-    it('should handle noop: dropDatabase with a callback', async () => {
-      const db = new Db(astraClient.httpClient, 'test-db');
-      db.dropDatabase((err, res) => {
-        assert.strictEqual(err, undefined);
-        assert.strictEqual(res, undefined);
-      });
-    });
-  });
 });
