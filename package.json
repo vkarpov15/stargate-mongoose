@@ -1,5 +1,5 @@
 {
-  "name": "astra-mongoose",
+  "name": "stargate-mongoose",
   "version": "0.0.3",
   "description": "DataStax Astra's NodeJS mongoose compatability client",
   "author": "CRW <chris.wilhite@datastax.com>",
