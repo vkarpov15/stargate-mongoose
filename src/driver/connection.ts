@@ -24,6 +24,18 @@ export class Connection extends MongooseConnection {
     super(base);
   }
 
+  _waitForClient() {
+    return new Promise<void>((resolve, reject) => {
+      if ((this.readyState === STATES.connecting || this.readyState === STATES.disconnected) && this._shouldBufferCommands()) {
+        this._queue.push({ fn: resolve });
+      } else if (this.readyState === STATES.disconnected && this.db == null) {
+        reject(new Error('Connection is disconnected'));
+      } else {
+        resolve();
+      }
+    });
+  }
+
   collection(name: string, options: any) {
     if (!(name in this.collections)) {
       this.collections[name] = new Collection(name, this, options);
@@ -31,14 +43,30 @@ export class Connection extends MongooseConnection {
     return super.collection(name, options);
   }
 
-  createCollection(name: string, options: any, callback: any) {
-    const db = this.client.db();
-    return db.createCollection(name, options, callback);
+  async createCollection(name: string, options: any, callback: any) {
+    try {
+      await this._waitForClient();
+      const db = this.client.db();
+      return db.createCollection(name, options, callback);
+    } catch (err) {
+      if (callback != null) {
+        return callback(err);
+      }
+      throw err;
+    }
   }
 
-  dropCollection(name: string, callback: any) {
-    const db = this.client.db();
-    return db.dropCollection(name);
+  async dropCollection(name: string, callback: any) {
+    try {
+      await this._waitForClient();
+      const db = this.client.db();
+      return db.dropCollection(name);
+    } catch (err) {
+      if (callback != null) {
+        return callback(err);
+      }
+      throw err;
+    }
   }
 
   openUri(uri: string, options: any, callback: any) {
@@ -52,6 +80,11 @@ export class Connection extends MongooseConnection {
     this._closeCalled = false;
     const _this = this;
 
+    for (const model of Object.values(this.models)) {
+      // @ts-ignore
+      model.init(() => {});
+    }
+
     return new Promise((resolve, reject) => {
       Client.connect(uri, function (err, client) {
         if (err) {
@@ -60,6 +93,8 @@ export class Connection extends MongooseConnection {
         _this.client = client;
         _this.db = client.db();
         _this.readyState = STATES.connected;
+
+        _this.onOpen();
 
         if (callback) {
           return callback(err, _this);
