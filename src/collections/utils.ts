@@ -16,9 +16,11 @@ import _ from 'lodash';
 import url from 'url';
 import { ObjectId } from 'mongodb';
 import { logger } from '@/src/logger';
+import axios from 'axios';
 
 interface ParsedUri {
   baseUrl: string;
+  baseApiPath: string;
   keyspaceName: string;
   applicationToken: string;
   logLevel: string;
@@ -52,6 +54,7 @@ export const parseUri = (uri: string): ParsedUri => {
   const baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
   const keyspaceName = parsedUrl.pathname?.replace('/', '');
   const applicationToken = parsedUrl.query?.applicationToken as string;
+  const baseApiPath = parsedUrl.query?.baseApiPath as string;
   const logLevel = parsedUrl.query?.logLevel as string;
   if (!keyspaceName) {
     throw new Error('Invalid URI: keyspace is required');
@@ -61,6 +64,7 @@ export const parseUri = (uri: string): ParsedUri => {
   }
   return {
     baseUrl,
+    baseApiPath: baseApiPath ?? '/api/rest/v2/namespaces',
     keyspaceName,
     applicationToken,
     logLevel
@@ -73,6 +77,7 @@ export const parseUri = (uri: string): ParsedUri => {
  * @param region the region of the Astra database
  * @param keyspace the keyspace to connect to
  * @param applicationToken an Astra application token
+ * @param logLevel an winston log level
  * @returns string
  */
 export const createAstraUri = (
@@ -93,6 +98,65 @@ export const createAstraUri = (
     uri.searchParams.append('logLevel', logLevel);
   }
   return uri.toString();
+};
+
+/**
+ * Create a stargate  connection URI
+ * @param baseUrl
+ * @param baseAuthUrl
+ * @param keyspace
+ * @param username
+ * @param password
+ * @param logLevel
+ * @returns string
+ */
+export const createStargateUri = async (
+  baseUrl: string,
+  baseAuthUrl: string,
+  keyspace: string,
+  username: string,
+  password: string,
+  logLevel?: string
+) => {
+  let uri = new url.URL(baseUrl);
+  uri.pathname = `/${keyspace}`;
+  uri.searchParams.append('baseApiPath', '/v2/namespaces');
+  if (logLevel) {
+    uri.searchParams.append('logLevel', logLevel);
+  }
+  const accessToken = await getStargateAccessToken(baseAuthUrl, username, password);
+  uri.searchParams.append('applicationToken', accessToken);
+  return uri.toString();
+};
+
+/**
+ *
+ * @param authUrl
+ * @param username
+ * @param password
+ */
+export const getStargateAccessToken = async (
+  authUrl: string,
+  username: string,
+  password: string
+) => {
+  try {
+    const response = await axios({
+      url: authUrl,
+      data: { username, password },
+      method: 'POST',
+      headers: {
+        Accepts: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data.authToken;
+  } catch (e: any) {
+    if (e.response?.data?.description) {
+      e.message = e.response?.data?.description;
+    }
+    throw e;
+  }
 };
 
 /**

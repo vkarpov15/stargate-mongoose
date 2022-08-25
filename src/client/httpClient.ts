@@ -32,6 +32,7 @@ const HTTP_METHODS = {
 
 interface AstraClientOptions {
   applicationToken: string;
+  baseApiPath?: string;
   baseUrl?: string;
   databaseId?: string;
   databaseRegion?: string;
@@ -85,6 +86,7 @@ axiosAgent.interceptors.request.use(requestInterceptor);
 axiosAgent.interceptors.response.use(responseInterceptor);
 
 export class HTTPClient {
+  baseApiPath: string;
   baseUrl: string;
   applicationToken: string;
   authHeaderName: string;
@@ -114,6 +116,7 @@ export class HTTPClient {
       setLevel(options.logLevel);
     }
 
+    this.baseApiPath = options.baseApiPath ?? '';
     this.applicationToken = options.applicationToken;
     this.authHeaderName = options.authHeaderName || DEFAULT_AUTH_HEADER;
     this.logLevel = options.logLevel || DEFAULT_LOG_LEVEL;

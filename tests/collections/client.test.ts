@@ -14,13 +14,13 @@
 
 import assert from 'assert';
 import { Client } from '@/src/collections/client';
-import { getClient, astraUri } from '@/tests/fixtures';
+import { getAstraClient, astraUri } from '@/tests/fixtures';
 
-describe('AstraMongoose - collections.Client', () => {
+describe('StargateMongoose - collections.Client', () => {
   const baseUrl = `https://${process.env.ASTRA_DB_ID}-${process.env.ASTRA_DB_REGION}.apps.astra.datastax.com`;
   let astraClient: Client;
   before(async () => {
-    astraClient = await getClient();
+    astraClient = await getAstraClient();
   });
 
   describe('Client Connections', () => {

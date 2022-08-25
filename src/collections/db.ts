@@ -17,8 +17,6 @@ import { Collection } from './collection';
 import { executeOperation } from './utils';
 import _ from 'lodash';
 
-const DEFAULT_BASE_PATH = '/api/rest/v2/namespaces';
-
 interface CollectionCallback {
   (err: Error | undefined, res: undefined): void;
 }
@@ -38,7 +36,7 @@ export class Db {
     }
     // use a clone of the underlying http client to support multiple db's from a single connection
     this.httpClient = _.cloneDeep(httpClient);
-    this.httpClient.baseUrl = `${this.httpClient.baseUrl}${DEFAULT_BASE_PATH}/${name}`;
+    this.httpClient.baseUrl = `${this.httpClient.baseUrl}${this.httpClient.baseApiPath}/${name}`;
     this.name = name;
   }
 
@@ -63,14 +61,17 @@ export class Db {
    */
   async createCollection(collectionName: string, options?: any, cb?: CollectionCallback) {
     return executeOperation(async () => {
-      const data = await this.httpClient.post('/collections', {
-        name: collectionName
-      }).then(res => res.data).catch(err => {
-        if (err?.response?.status === 409) {
-          return null; // Collection already exists
-        }
-        throw err;
-      });
+      const data = await this.httpClient
+        .post('/collections', {
+          name: collectionName
+        })
+        .then(res => res.data)
+        .catch(err => {
+          if (err?.response?.status === 409) {
+            return null; // Collection already exists
+          }
+          throw err;
+        });
       return data;
     }, cb);
   }
