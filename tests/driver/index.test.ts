@@ -14,10 +14,10 @@
 
 import mongoose from 'mongoose';
 import { astraUri } from '@/tests/fixtures';
-import * as astraMongooseDriver from '@/src/driver';
+import * as StargateMongooseDriver from '@/src/driver';
 
 // @ts-ignore
-mongoose.setDriver(astraMongooseDriver);
+mongoose.setDriver(StargateMongooseDriver);
 
 const cartSchema = new mongoose.Schema({
   name: String,
@@ -33,7 +33,7 @@ const productSchema = new mongoose.Schema({
 const Cart = mongoose.model('Cart', cartSchema);
 const Product = mongoose.model('Product', productSchema);
 
-describe('AstraMongoose - index', () => {
+describe('StargateMongoose - index', () => {
   it('should leverage astradb', async () => {
     await mongoose.connect(astraUri);
 

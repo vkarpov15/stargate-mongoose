@@ -19,6 +19,7 @@ import _ from 'lodash';
 
 interface ClientOptions {
   applicationToken: string;
+  baseApiPath: string;
   keyspaceName?: string;
   logLevel?: string;
 }
@@ -44,6 +45,7 @@ export class Client {
     this.keyspaceName = options.keyspaceName;
     this.applicationToken = options.applicationToken;
     this.httpClient = new HTTPClient({
+      baseApiPath: options.baseApiPath,
       baseUrl: this.baseURL,
       applicationToken: options.applicationToken,
       logLevel: options.logLevel
@@ -62,6 +64,7 @@ export class Client {
     const parsedUri = parseUri(uri);
     const client = new Client(parsedUri.baseUrl, {
       applicationToken: parsedUri.applicationToken,
+      baseApiPath: parsedUri.baseApiPath,
       keyspaceName: parsedUri.keyspaceName,
       logLevel: parsedUri.logLevel
     });

@@ -19,7 +19,7 @@ import STATES from 'mongoose/lib/connectionstate';
 import _ from 'lodash';
 
 export class Connection extends MongooseConnection {
-  debugType = 'AstraMongooseConnection';
+  debugType = 'StargateMongooseConnection';
   constructor(base: any) {
     super(base);
   }

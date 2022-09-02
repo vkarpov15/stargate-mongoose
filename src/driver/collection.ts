@@ -15,7 +15,7 @@
 import { default as MongooseCollection } from 'mongoose/lib/collection';
 
 export class Collection extends MongooseCollection {
-  debugType = 'AstraMongooseCollection';
+  debugType = 'StargateMongooseCollection';
 
   constructor(name: string, conn: any, options: any) {
     super(name, conn, options);

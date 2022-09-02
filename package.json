@@ -1,9 +1,13 @@
 {
   "name": "stargate-mongoose",
-  "version": "0.0.3",
-  "description": "DataStax Astra's NodeJS mongoose compatability client",
-  "author": "CRW <chris.wilhite@datastax.com>",
-  "homepage": "https://github.com/datastax-labs/astra-mongoose",
+  "version": "0.1.0",
+  "description": "Stargate's NodeJS mongoose compatability client",
+  "contributors": [
+    "CRW (http://barnyrubble.tumblr.com/)",
+    "Valeri Karpov (https://github.com/vkarpov15)",
+    "Aaron Morton (https://github.com/amorton)"
+  ],
+  "homepage": "https://github.com/stargate/stargate-mongoose",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "mocha": {
@@ -25,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/datastax/astrajs.git"
+    "url": "git+https://github.com/stargate/stargate-mongoose.git"
   },
   "scripts": {
     "test": "nyc ts-mocha --paths -p tsconfig.json tests/**/*.test.ts",
@@ -33,7 +37,7 @@
     "build:docs": "jsdoc2md -t README.hbs --files src/**/*.ts --configure ./jsdoc2md.json > README.md"
   },
   "bugs": {
-    "url": "https://github.com/datastax-labs/astra-mongoose/issues"
+    "url": "https://github.com/stargate/stargate-mongoose/issues"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",

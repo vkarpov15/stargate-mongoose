@@ -1,33 +1,35 @@
-# astra-mongoose
+# stargate-mongoose
 
-![tests workflow](https://github.com/kidrecursive/astra-mongoose/actions/workflows/main.yml/badge.svg)
+![tests workflow](https://github.com/stargate/stargate-mongoose/actions/workflows/main.yml/badge.svg)
 
-`astra-mongoose` is a mongoose driver for [Astra DB](https://astra.datastax.com).
+`stargate-mongoose` is a mongoose driver for [Astra DB](https://astra.datastax.com).
 
 ## Table of contents
 
 1. [Quickstart](#quickstart)
-2. [Compatability](#compatability)
-3. [MongoDB Driver Overriding](#nodejs-mongodb-driver-overriding-experimental)
-4. [API Reference](#api-reference)
+2. [Testing](#testing)
+3. [Compatability](#compatability)
+4. [MongoDB Driver Overriding](#nodejs-mongodb-driver-overriding-experimental)
+5. [API Reference](#api-reference)
 
 ## Quickstart
 
 To get started, install the the package and then override the `node-mongodb-native` driver that mongoose sets up by default. After that, set up your connection to Astra DB and get started! Refer to the combatability section of the README to see what will just work and what won't.
 
 ```bash
-npm i -s astra-mongoose
+npm i -s stargate-mongoose
 ```
 
+### Connect to an Astra DB instance
 ```javascript
 import mongoose from 'mongoose';
-import { driver, collections } from 'astra-mongoose';
+import { driver, collections } from 'stargate-mongoose';
 
 // override the default mongodb native driver
 mongoose.setDriver(driver);
 
 // create an Astra DB URI
-const astraUri = collections.createAstraUri(
+const astraUri = createAstraUri(
   process.env.ASTRA_DB_ID,
   process.env.ASTRA_DB_REGION,
   process.env.ASTRA_DB_KEYSPACE,
@@ -37,6 +39,62 @@ const astraUri = collections.createAstraUri(
 // get mongoose connected to Astra
 await mongoose.connect(astraUri);
 ```
+
+### Connect to a Stargate instance
+```javascript
+import mongoose from 'mongoose';
+import { driver, collections } from 'stargate-mongoose';
+
+// override the default mongodb native driver
+mongoose.setDriver(driver);
+
+// create an Astra DB URI
+const stargateUri = createStargateUri(
+  process.env.STARGATE_BASE_URL,
+  process.env.STARGATE_AUTH_URL,
+  process.env.ASTRA_DB_KEYSPACE,
+  process.env.STARGATE_USERNAME,
+  process.env.STARGATE_PASSWORD
+);
+
+// get mongoose connected to Stargate
+await mongoose.connect(stargateUri);
+```
+
+## Testing
+
+Prerequisites:
+- [Docker](https://docker.com/)
+- An [Astra DB Instance](https://astra.datastax.com/) 
+
+Tests are run against a local Stargate container and also against your remote Astra DB instance. Astra DB instances are free to try.
+
+First, create an `.env` file in the root of your project that includes your Astra DB connection details:
+
+```env
+ASTRA_DB_APPLICATION_TOKEN=
+ASTRA_DB_KEYSPACE=
+ASTRA_DB_ID=
+ASTRA_DB_REGION=
+STARGATE_BASE_URL=http://localhost:8082
+STARGATE_AUTH_URL=http://localhost:8081/v1/auth
+STARGATE_USERNAME=cassandra
+STARGATE_PASSWORD=cassandra
+```
+
+Launch a stargate docker container: 
+
+```bash
+bin/start_stargate
+```
+
+Finally, run the tests:
+
+```
+npm test
+```
+
+When you add tests that you would like to run against both your local Stargate instance and your remote Astra DB instance, ensure that they are inside of the `for (const testClient in testClients) {` block inside the test file.
 
 ## Compatability
 
@@ -63,7 +121,7 @@ These are operators that are available when forming a MongoDB compatible query o
 | $exists        | supported     |                                                                   |
 | $type          | not supported |                                                                   |
 | $expr          | not supported |                                                                   |
-| $jsonSchema    | in progress   | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/2) |
+| $jsonSchema    | in progress   | [Issue](https://github.com/stargate/stargate-mongoose/issues/2) |
 | $mod           | not supported |                                                                   |
 | $regex         | not supported |                                                                   |
 | $text          | not supported |                                                                   |
@@ -83,8 +141,8 @@ These are operators that are available when forming a MongoDB compatible query o
 | $elemMatch     | not supported |                                                                   |
 | $meta          | not supported |                                                                   |
 | $slice         | not supported |                                                                   |
-| $comment       | in progress   | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/3) |
-| $rand          | in progress   | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/4) |
+| $comment       | in progress   | [Issue](https://github.com/stargate/stargate-mongoose/issues/3) |
+| $rand          | in progress   | [Issue](https://github.com/stargate/stargate-mongoose/issues/4) |
 | projection     | supported     |                                                                   |
 | sort           | not supported |                                                                   |
 | skip           | not supported |                                                                   |
@@ -99,8 +157,8 @@ These are operators that are available when forming a MongoDB compatible update 
 | ------------ | ------------- | ------------------------------------------------------------------ |
 | $addFields   | supported     |                                                                    |
 | $set         | supported     |                                                                    |
-| $projection  | in progress   | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/10) |
-| $unset       | in progress   | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/10) |
+| $projection  | in progress   | [Issue](https://github.com/stargate/stargate-mongoose/issues/10) |
+| $unset       | in progress   | [Issue](https://github.com/stargate/stargate-mongoose/issues/10) |
 | $replaceRoot | supported     |                                                                    |
 | $replaceWith | supported     |                                                                    |
 | upsert       | not supported |                                                                    |
@@ -113,9 +171,9 @@ These are operations that are available when working with a mongodb Collection o
 | ------------------------- | --------------- | ------------------------------------------------------------------ |
 | aggregate                 | not supported   |                                                                    |
 | bulkWrite                 | supported       |                                                                    |
-| count                     | limited support | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/11) |
-| countDocuments            | limited support | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/11) |
-| estimatedDocumentCount    | limited support | [Issue](https://github.com/datastax-labs/astra-mongoose/issues/11) |
+| count                     | limited support | [Issue](https://github.com/stargate/stargate-mongoose/issues/11) |
+| countDocuments            | limited support | [Issue](https://github.com/stargate/stargate-mongoose/issues/11) |
+| estimatedDocumentCount    | limited support | [Issue](https://github.com/stargate/stargate-mongoose/issues/11) |
 | createIndex               | not supported   |                                                                    |
 | deleteMany                | supported       |                                                                    |
 | deleteOne                 | supported       |                                                                    |
@@ -169,7 +227,7 @@ These are operations that are available when working with a mongodb Db or a Mong
 MongoDB compatible index operations are not supported. There is one caveat for `ttl` indexes: When adding a document, you can add a `ttl` option (determined in seconds) that will behave in the similar way to a `ttl` index. For example, with the collections client:
 
 ```javascript
-import { Client, createAstraUri } from 'astra-mongoose';
+import { Client, createAstraUri } from 'stargate-mongoose';
 
 // create an Astra DB URI
 const astraUri = createAstraUri(
@@ -199,14 +257,14 @@ MongoDB compatible transaction operations are not supported.
 
 ## NodeJS MongoDB Driver Overriding (experimental)
 
-If you have an application that uses the NodeJS MongoDB driver, or a dependency that uses the NodeJS MongoDB driver, it is possible to override it's use with the collections package of `astra-mongoose`. This makes your application use Astra DB documents instead of MongoDB documents. Doing so requires code changes in your application that address the compatibility section of this README, and a change in how you set up your client connection.
+If you have an application that uses the NodeJS MongoDB driver, or a dependency that uses the NodeJS MongoDB driver, it is possible to override it's use with the collections package of `stargate-mongoose`. This makes your application use Astra DB documents instead of MongoDB documents. Doing so requires code changes in your application that address the compatibility section of this README, and a change in how you set up your client connection.
 
 If your application uses `mongodb` you can override it's usage like so:
 
 In your app's `mongodb` `package.json` entry:
 
 ```json
-"mongodb": "astra-mongoose@0.1.0",
+"mongodb": "stargate-mongoose@0.1.0",
 ```
 
 Then, re-install your dependencies
@@ -218,7 +276,7 @@ npm i
 Finally, modify your connection so that your driver connects to Astra
 
 ```javascript
-import { MongoClient, createAstraUri } from 'astra-mongoose';
+import { MongoClient, createAstraUri } from 'stargate-mongoose';
 
 // create an Astra DB URI
 const astraUri = createAstraUri(
@@ -234,15 +292,15 @@ const client = await MongoClient.connect(astraUri);
 
 If you have an application dependency that uses `mongodb`, you can override it's usage like so (this example uses `mongoose`):
 
-Add an override to your app's `package.json` (requires NPM 8.3+), also, add `astra-mongoose as a dependency:
+Add an override to your app's `package.json` (requires NPM 8.3+), also, add `stargate-mongoose as a dependency:
 
 ```json
 "dependencies": {
-    "astra-mongoose": "^0.1.0"
+    "stargate-mongoose": "^0.1.0"
 },
 "overrides": {
     "mongoose": {
-        "mongodb":  "astra-mongoose@0.1.0"
+        "mongodb":  "stargate-mongoose@0.1.0"
     }
 },
 ```
@@ -257,7 +315,7 @@ Finally, modify your depdendencies connection so that your driver connects to As
 
 ```javascript
 import mongoose from 'mongoose';
-import { createAstraUri } from 'astra-mongoose';
+import { createAstraUri } from 'stargate-mongoose';
 
 // create an Astra DB URI
 const astraUri = createAstraUri(
@@ -293,6 +351,10 @@ await mongoose.connect(astraUri);
 <dt><a href="#parseUri">parseUri</a> ⇒</dt>
 <dd><p>Create a production Astra connection URI</p></dd>
 <dt><a href="#createAstraUri">createAstraUri</a> ⇒</dt>
+<dd><p>Create a stargate  connection URI</p></dd>
+<dt><a href="#createStargateUri">createStargateUri</a></dt>
+<dd></dd>
+<dt><a href="#getStargateAccessToken">getStargateAccessToken</a> ⇒</dt>
 <dd></dd>
 <dt><a href="#addDefaultId">addDefaultId</a> ⇒</dt>
 <dd></dd>
@@ -393,7 +455,10 @@ return a promise.</p></dd>
     * [new Collection(httpClient, name)](#new_Collection_new)
     * [.insertOne(mongooseDoc, options, cb)](#Collection+insertOne) ⇒
     * [.aggregate(pipeline, options)](#Collection+aggregate)
+    * [.bulkWrite(ops, options, cb)](#Collection+bulkWrite)
     * [.createIndex(index, options, cb)](#Collection+createIndex) ⇒
+    * [.dropIndexes(index, options, cb)](#Collection+dropIndexes) ⇒
+    * [._upsertDoc(filter, update)](#Collection+_upsertDoc) ⇒
 
 <a name="new_Collection_new"></a>
 
@@ -426,6 +491,17 @@ return a promise.</p></dd>
 | pipeline | 
 | options | 
 
+<a name="Collection+bulkWrite"></a>
+
+### collection.bulkWrite(ops, options, cb)
+**Kind**: instance method of [<code>Collection</code>](#Collection)  
+
+| Param |
+| --- |
+| ops | 
+| options | 
+| cb | 
+
 <a name="Collection+createIndex"></a>
 
 ### collection.createIndex(index, options, cb) ⇒
@@ -438,6 +514,31 @@ return a promise.</p></dd>
 | options | 
 | cb | 
 
+<a name="Collection+dropIndexes"></a>
+
+### collection.dropIndexes(index, options, cb) ⇒
+**Kind**: instance method of [<code>Collection</code>](#Collection)  
+**Returns**: <p>any</p>  
+
+| Param |
+| --- |
+| index | 
+| options | 
+| cb | 
+
+<a name="Collection+_upsertDoc"></a>
+
+### collection.\_upsertDoc(filter, update) ⇒
+<p>Calculates the document to upsert based on query and filter</p>
+
+**Kind**: instance method of [<code>Collection</code>](#Collection)  
+**Returns**: <p>any</p>  
+
+| Param |
+| --- |
+| filter | 
+| update | 
+
 <a name="FindCursor"></a>
 
 ## FindCursor
@@ -447,6 +548,7 @@ return a promise.</p></dd>
     * [new FindCursor(collection, query, options)](#new_FindCursor_new)
     * [.getAll()](#FindCursor+getAll) ⇒
     * [.toArray(cb)](#FindCursor+toArray) ⇒
+    * [.next(iterator, cb)](#FindCursor+next)
     * [.forEach(iterator, cb)](#FindCursor+forEach)
     * [.count(options, cb)](#FindCursor+count) ⇒
     * [.stream(options)](#FindCursor+stream)
@@ -474,6 +576,16 @@ return a promise.</p></dd>
 
 | Param |
 | --- |
+| cb | 
+
+<a name="FindCursor+next"></a>
+
+### findCursor.next(iterator, cb)
+**Kind**: instance method of [<code>FindCursor</code>](#FindCursor)  
+
+| Param |
+| --- |
+| iterator | 
 | cb | 
 
 <a name="FindCursor+forEach"></a>
@@ -596,10 +708,39 @@ return a promise.</p></dd>
 | region | <p>the region of the Astra database</p> |
 | keyspace | <p>the keyspace to connect to</p> |
 | applicationToken | <p>an Astra application token</p> |
+| logLevel | <p>an winston log level</p> |
 
 <a name="createAstraUri"></a>
 
 ## createAstraUri ⇒
+<p>Create a stargate  connection URI</p>
+
+**Kind**: global variable  
+**Returns**: <p>string</p>  
+
+| Param |
+| --- |
+| baseUrl | 
+| baseAuthUrl | 
+| keyspace | 
+| username | 
+| password | 
+| logLevel | 
+
+<a name="createStargateUri"></a>
+
+## createStargateUri
+**Kind**: global variable  
+
+| Param |
+| --- |
+| authUrl | 
+| username | 
+| password | 
+
+<a name="getStargateAccessToken"></a>
+
+## getStargateAccessToken ⇒
 **Kind**: global variable  
 **Returns**: <p>Object</p>  
 

@@ -28,6 +28,7 @@ import { formatQuery, addDefaultId, setOptionsAndCb, executeOperation } from './
 import { inspect } from 'util';
 import mpath from 'mpath';
 import { InsertManyResult } from 'mongoose';
+import { logger } from '@/src/logger';
 
 // https://github.com/mongodb/node-mongodb-native/pull/3323
 type AstraUpdateResult = Omit<UpdateResult, 'upsertedId'> & { upsertedId: ObjectId | null };
@@ -82,7 +83,7 @@ export class Collection {
     return executeOperation(async (): Promise<InsertManyResult<any>> => {
       docs = docs.map((doc: any) => addDefaultId(doc));
       const { data } = await this.httpClient.post('/batch', docs, { params: { 'id-path': '_id' } });
-      
+
       return {
         acknowledged: true,
         insertedCount: data.documentIds?.length || 0,
@@ -270,7 +271,7 @@ export class Collection {
       const docs = await cursor.toArray();
       if (docs.length) {
         let withoutId = null;
-        if (withoutId = docs.find((doc: any) => doc._id === undefined)) {
+        if ((withoutId = docs.find((doc: any) => doc._id === undefined))) {
           throw new Error('Cannot delete document without an _id, deleting: ' + inspect(withoutId));
         }
         const res = await Promise.all(
@@ -314,6 +315,7 @@ export class Collection {
   }
 
   async countDocuments(query: any, options?: any, cb?: any) {
+    logger.warn('Counting documents is supported on the client only, use with caution.');
     ({ options, cb } = setOptionsAndCb(options, cb));
     return executeOperation(async (): Promise<number> => {
       const cursor = this.find(query, options);
@@ -337,7 +339,11 @@ export class Collection {
       if (doc) {
         await this.httpClient.delete(`/${doc._id}`);
       }
-      if (options?.new === true || options?.returnOriginal === false || options?.returnDocument === 'after') {
+      if (
+        options?.new === true ||
+        options?.returnOriginal === false ||
+        options?.returnDocument === 'after'
+      ) {
         doc = null;
       }
       return { value: doc, ok: 1 };
@@ -423,18 +429,14 @@ export class Collection {
 
   /**
    * Calculates the document to upsert based on query and filter
-   * 
+   *
    * @param filter
    * @param update
    * @returns any
    */
   _upsertDoc(filter: any, update: any) {
     const doc = { ...filter };
-    const updateOperatorsToApply = new Set([
-      '$set',
-      '$setOnInsert',
-      '$inc'
-    ]);
+    const updateOperatorsToApply = new Set(['$set', '$setOnInsert', '$inc']);
 
     for (const key of Object.keys(update)) {
       if (key.charAt(0) === '$') {

@@ -16,7 +16,7 @@ import assert from 'assert';
 import { astraUri } from '@/tests/fixtures';
 import { HTTPClient } from '@/src/client/httpClient';
 
-describe('AstraMongoose - client.HTTPClient', () => {
+describe('StargateMongoose - client.HTTPClient', () => {
   const astraClient = new HTTPClient({
     baseUrl: astraUri,
     applicationToken: process.env.ASTRA_DB_APPLICATION_TOKEN || ''
