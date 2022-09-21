@@ -1,6 +1,6 @@
 {
   "name": "stargate-mongoose",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Stargate's NodeJS mongoose compatability client",
   "contributors": [
     "CRW (http://barnyrubble.tumblr.com/)",
