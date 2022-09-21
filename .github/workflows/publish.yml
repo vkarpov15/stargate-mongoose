@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Tests - stargate-mongoose
+name: Publish - stargate-mongoose
 on:
-  pull_request:
+  push:
     branches:
       - main
 jobs:
-  tests:
+  publish:
     runs-on: ubuntu-latest
     env:
       ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
@@ -35,20 +35,20 @@ jobs:
         env:
           CLUSTER_NAME: stargate
           DEVELOPER_MODE: true
-          CLUSTER_VERSION: 4.0 
+          CLUSTER_VERSION: 4.0
         ports:
           - 8080:8080
           - 8081:8081
           - 8082:8082
           - 9042:9042
     steps:
-      - uses: actions/checkout@v2
-      - name: Setting up the node version
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.15.0
-      - name: setup project
-        run: |
-          npm i
-      - name: run tests
-        run: npm test
+      - run: npm i
+      - run: npm test
+      - run: npm build
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
